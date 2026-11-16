@@ -100,12 +100,14 @@ extension _PlexVideoControlsNavigationMethods on _PlexVideoControlsState {
 
       // Plex's OpenSubtitles download is asynchronous: the PUT returns immediately
       // but the new stream entry shows up in metadata seconds later. Poll until it
-      // appears. Up to 15s matches what Plex-web tolerates before giving up.
+      // appears. Provider downloads can be slow — OpenSubtitles fetches the file
+      // server-side before Plex indexes it — so the poll runs up to 4 minutes
+      // before giving up.
       // Snapshot the authoritative source IDs so we can identify the new
       // download without asking mpv to synchronously open its remote URL.
       final existingSourceIds = widget.sourceSubtitleTracks.map((track) => track.id).toSet();
 
-      final deadline = DateTime.now().add(const Duration(seconds: 15));
+      final deadline = DateTime.now().add(const Duration(minutes: 4));
       MediaSubtitleTrack? newTrack;
 
       while (mounted && DateTime.now().isBefore(deadline)) {

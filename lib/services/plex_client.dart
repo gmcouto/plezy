@@ -1519,6 +1519,7 @@ class PlexClient
           'forced': forced ? 1 : 0,
           'providerTitle': providerTitle,
         },
+        timeout: MediaServerTimeouts.subtitleDownload,
       ),
       'Failed to download subtitle',
     );

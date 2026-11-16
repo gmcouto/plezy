@@ -106,6 +106,14 @@ class MediaServerTimeouts {
 
   static const plexTvReceive = Duration(seconds: 10);
 
+  /// Whole-request budget for downloading a subtitle from an external provider
+  /// (`PUT /library/metadata/{ratingKey}/subtitles`). The Plex server fetches
+  /// the file from OpenSubtitles before answering, which under provider load
+  /// can take far longer than the generic [response] budget. Matches the
+  /// metadata poll deadline the caller applies while waiting for the new
+  /// stream to appear (see `_onSubtitleDownloaded`).
+  static const subtitleDownload = Duration(minutes: 4);
+
   /// Authenticated health probe timeout. Health sweeps await every server, so
   /// a stale Plex endpoint must not hold the whole sweep for [response].
   static const plexProbe = Duration(seconds: 8);
