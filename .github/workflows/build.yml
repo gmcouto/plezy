@@ -67,6 +67,8 @@ jobs:
       id-token: write
       attestations: write
       contents: read
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -106,7 +108,7 @@ jobs:
         run: flutter pub get --enforce-lockfile --no-example
 
       - name: Configure Android signing
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
           cat > android/key.properties << EOF
@@ -128,7 +130,7 @@ jobs:
         run: ./scripts/upload-symbols.sh android-apk
 
       - name: Clean up keystore
-        if: always() && secrets.ANDROID_KEYSTORE_BASE64 != ''
+        if: always() && env.ANDROID_KEYSTORE_BASE64 != ''
         run: rm -f android/app/upload-keystore.jks android/key.properties
 
       - name: Package APKs
@@ -230,6 +232,9 @@ jobs:
       id-token: write
       attestations: write
       contents: read
+    env:
+      MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -274,7 +279,7 @@ jobs:
         run: ./scripts/upload-symbols.sh macos
 
       - name: Import Code Signing Certificate
-        if: ${{ secrets.MACOS_CERTIFICATE_BASE64 != '' }}
+        if: ${{ env.MACOS_CERTIFICATE_BASE64 != '' }}
         env:
           MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -294,7 +299,7 @@ jobs:
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain
 
       - name: Sign Application
-        if: ${{ secrets.MACOS_CERTIFICATE_BASE64 != '' }}
+        if: ${{ env.MACOS_CERTIFICATE_BASE64 != '' }}
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
@@ -323,7 +328,7 @@ jobs:
           codesign --force --sign "$IDENTITY" --timestamp --options runtime --entitlements macos/Runner/Release.entitlements "$APP_PATH"
 
       - name: Verify Signature
-        if: ${{ secrets.MACOS_CERTIFICATE_BASE64 != '' }}
+        if: ${{ env.MACOS_CERTIFICATE_BASE64 != '' }}
         run: |
           APP_PATH="build/macos/Build/Products/Release/Plezy.app"
           echo "Verifying signature..."
@@ -336,7 +341,7 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
       - name: Notarize Application
-        if: ${{ secrets.APPLE_ID != '' }}
+        if: ${{ env.APPLE_ID != '' }}
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
